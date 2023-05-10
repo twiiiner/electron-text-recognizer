@@ -1,5 +1,5 @@
 import { app, BrowserWindow, ipcMain, Menu, dialog } from "electron";
-import { IPCMainEvent } from "@/types/electron";
+import { IPCMainEvent, IPCMainWindowRendererEvent } from "@/types/electron";
 import path from "path";
 import fs from "fs/promises";
 import { logError } from "./shared/utils/errors";
@@ -10,6 +10,8 @@ declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 if (require("electron-squirrel-startup")) {
   app.quit();
 }
+
+let mainWindow: BrowserWindow;
 
 async function handleFileOpen() {
   const filesPaths = dialog.showOpenDialogSync({
@@ -38,6 +40,11 @@ async function handleFileOpen() {
     logError(error);
     return;
   }
+
+  mainWindow.webContents.send(
+    IPCMainWindowRendererEvent.TransferImageToRenderer,
+    fileBase64Data
+  );
 }
 
 function createMenuForMainWindow() {
@@ -55,7 +62,7 @@ function createMenuForMainWindow() {
 }
 
 const createWindow = (): void => {
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     height: 600,
     width: 800,
     webPreferences: {
@@ -65,9 +72,10 @@ const createWindow = (): void => {
 
   mainWindow.setMenu(createMenuForMainWindow());
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
-  if (process.env.NODE_ENV === "DEVELOPMENT") {
-    mainWindow.webContents.openDevTools();
-  }
+  // TODO check env variable
+  // if (process.env.NODE_ENV === "DEVELOPMENT") {
+  mainWindow.webContents.openDevTools();
+  // }
 };
 app.on("ready", createWindow);
 app.on("window-all-closed", () => {

@@ -1,8 +1,9 @@
 import React from "react";
 import { windowMain } from "@/frontend/windows/main/types";
+import classes from "./MainPage.module.scss";
 
 export default function MainPage() {
-  return <div>Hello from main page!</div>;
+  return <div className={classes.root}>Hello from main page!</div>;
 }
 
 windowMain.electron.registerImageTransferCallback((imageBase64Data) => {
